@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  color-scheme: dark;
+  /* Backdrop tint as space-separated RGB channels (indigo). */
+  --ambient: 79 70 229;
+}
+
+body {
+  background-color: var(--color-zinc-950);
+  color: var(--color-zinc-100);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/*
+ * Ambient backdrop: a few large, soft fields of one colour (--ambient) behind everything, drifting
+ * and shifting hue slowly. Radial gradients are used instead of filter: blur()
+ * so the layer is painted once; only its transform and a hue-rotate filter
+ * animate, both of which the compositor handles. The layer is oversized so the
+ * drift never exposes an edge.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(46% 42% at 76% 22%, rgb(var(--ambient) / 0.36), transparent 72%),
+    radial-gradient(42% 40% at 18% 78%, rgb(var(--ambient) / 0.22), transparent 72%),
+    radial-gradient(34% 30% at 50% 50%, rgb(var(--ambient) / 0.08), transparent 72%);
+  animation:
+    ambient-drift 26s ease-in-out infinite alternate,
+    ambient-hue 38s ease-in-out infinite alternate;
+}
+
+/* Faint static grain; hides colour banding in the gradients on dark screens. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes ambient-drift {
+  from {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(6%, 4%, 0) scale(1.15);
+  }
+}
+
+/*
+ * Still one colour at any moment, but it shifts gradually: blue, through the
+ * base indigo, to violet-magenta and back. The two animations have different
+ * lengths so position and colour never repeat in step.
+ */
+@keyframes ambient-hue {
+  from {
+    filter: hue-rotate(-45deg);
+  }
+  to {
+    filter: hue-rotate(65deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}
+
+/*
+ * iOS 26-style "Liquid Glass". Reserved for floating chrome that sits above
+ * content (sheet controls, badges on posters), never for content itself.
+ */
+@utility liquid-glass {
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background-color: rgb(255 255 255 / 0.07);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(255 255 255 / 0.04),
+    0 8px 32px rgb(0 0 0 / 0.35);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-zinc-100);
+  outline-offset: 2px;
+}
+
+/* Tailwind v4 leaves buttons with the default arrow cursor; restore the pointer. */
+@layer base {
+  button:not(:disabled):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
